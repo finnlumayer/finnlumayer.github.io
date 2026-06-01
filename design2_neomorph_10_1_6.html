@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2a1f14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daylight">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzJhMWYxNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzZDJiMWEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDwhLS0gSGludGVyZ3J1bmQgLS0+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBHcm/Dn2VzIEQg4oCTIFRlcnJha290dGEgLS0+CiAgPHRleHQgeD0iODAiIHk9IjM3MCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjM0MCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI2M4NTYyYSIgb3BhY2l0eT0iMC45MiI+RDwvdGV4dD4KICA8IS0tIERyZWkgaG9yaXpvbnRhbGUgU3RyaWNoZSAoRGFzaGJvYXJkLU1ldGFwaGVyKSAtLT4KICA8cmVjdCB4PSIyNzIiIHk9IjE2OCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIxOCIgcng9IjkiIGZpbGw9IiNjOGE5NmUiIG9wYWNpdHk9IjAuODUiLz4KICA8cmVjdCB4PSIyNzIiIHk9IjIyMiIgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxOCIgcng9IjkiIGZpbGw9IiNjOGE5NmUiIG9wYWNpdHk9IjAuNTUiLz4KICA8cmVjdCB4PSIyNzIiIHk9IjI3NiIgd2lkdGg9IjE0MCIgaGVpZ2h0PSIxOCIgcng9IjkiIGZpbGw9IiNjOGE5NmUiIG9wYWNpdHk9IjAuMzUiLz4KPC9zdmc+Cg==">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzJhMWYxNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzZDJiMWEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDwhLS0gSGludGVyZ3J1bmQgLS0+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBHcm/Dn2VzIEQg4oCTIFRlcnJha290dGEgLS0+CiAgPHRleHQgeD0iODAiIHk9IjM3MCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjM0MCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI2M4NTYyYSIgb3BhY2l0eT0iMC45MiI+RDwvdGV4dD4KICA8IS0tIERyZWkgaG9yaXpvbnRhbGUgU3RyaWNoZSAoRGFzaGJvYXJkLU1ldGFwaGVyKSAtLT4KICA8cmVjdCB4PSIyNzIiIHk9IjE2OCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIxOCIgcng9IjkiIGZpbGw9IiNjOGE5NmUiIG9wYWNpdHk9IjAuODUiLz4KICA8cmVjdCB4PSIyNzIiIHk9IjIyMiIgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxOCIgcng9IjkiIGZpbGw9IiNjOGE5NmUiIG9wYWNpdHk9IjAuNTUiLz4KICA8cmVjdCB4PSIyNzIiIHk9IjI3NiIgd2lkdGg9IjE0MCIgaGVpZ2h0PSIxOCIgcng9IjkiIGZpbGw9IiNjOGE5NmUiIG9wYWNpdHk9IjAuMzUiLz4KPC9zdmc+Cg==">
+<link rel="manifest" href="./manifest.json">
 <title>Dashboard — Daylight</title>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
 <style>
   /* Eingebettete Schriftarten – kein externer Abruf nötig (offline-fähig) */
   @font-face {
@@ -714,7 +727,14 @@
             </button>
           </div>
         </div>
-        <!-- 5. Zurücksetzen -->
+        <!-- 5. Cloud Sync -->
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <div class="settings-section-title">☁ Cloud-Sync</div>
+          <div class="settings-section-desc" id="syncStatusLabel">Nicht konfiguriert</div>
+          <button class="add-btn" onclick="openSyncModal();toggleTopSettings();" style="color:var(--blue);align-self:flex-start;">⚙ Sync einrichten</button>
+          <button class="add-btn" id="syncNowBtn" onclick="syncNow()" style="color:var(--green);align-self:flex-start;display:none;">↕ Jetzt synchronisieren</button>
+        </div>
+        <!-- 6. Zurücksetzen -->
         <div style="display:flex;flex-direction:column;gap:0.5rem;">
           <div class="settings-section-title">🗑 Zurücksetzen</div>
           <div class="settings-section-desc">Alle Daten unwiderruflich löschen.</div>
@@ -889,6 +909,41 @@
       </div>
       <div><label class="modal-label">Raum</label><input id="f-room" type="text" placeholder="z. B. H1.07" class="modal-input"></div>
       <button onclick="addExam()" style="background:var(--surface);box-shadow:4px 4px 8px var(--shadow-dark),-3px -3px 6px var(--shadow-light);border:1px solid rgba(var(--accent-rgb),0.2);color:var(--accent);border-radius:10px;padding:10px;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;">Klausur speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sync-Konfigurations-Modal -->
+<div id="syncModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:400;align-items:center;justify-content:center;">
+  <div class="modal-card" style="padding:2rem;width:min(480px,92vw);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <span style="font-family:var(--font-display);font-size:22px;color:var(--text-primary);">☁ Cloud-Sync einrichten</span>
+      <button onclick="closeSyncModal()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">
+      Deine Zugangsdaten werden <strong>nur lokal</strong> auf diesem Gerät gespeichert – niemals auf GitHub oder einem anderen Server. Der Sync läuft über <strong>Google Firebase Firestore</strong>.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div>
+        <label class="modal-label">Firebase API Key</label>
+        <input id="sync-apikey" type="password" placeholder="AIzaSy…" class="modal-input">
+      </div>
+      <div>
+        <label class="modal-label">Project ID</label>
+        <input id="sync-projectid" type="text" placeholder="mein-projekt-12345" class="modal-input">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Zu finden in der Firebase-Konsole unter Projekteinstellungen.</div>
+      </div>
+      <div>
+        <label class="modal-label">Sync-ID <span style="font-weight:400;color:var(--text-muted)">(beliebiger eigener Bezeichner)</span></label>
+        <input id="sync-uid" type="text" placeholder="z. B. mein-dashboard" class="modal-input">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Gleiche ID auf allen deinen Geräten verwenden.</div>
+      </div>
+      <div id="syncTestResult" style="font-size:12px;min-height:18px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="testSyncConnection()" style="flex:1;background:var(--inset);box-shadow:inset 2px 2px 4px var(--shadow-dark),inset -1px -1px 3px var(--shadow-light);border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:10px;font-family:var(--font-body);font-size:13px;cursor:pointer;">Verbindung testen</button>
+        <button onclick="saveSyncConfig()" style="flex:2;background:var(--surface);box-shadow:4px 4px 8px var(--shadow-dark),-3px -3px 6px var(--shadow-light);border:1px solid rgba(42,106,154,0.2);color:var(--blue);border-radius:10px;padding:10px;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;">Speichern & Aktivieren</button>
+      </div>
+      <button id="syncClearBtn" onclick="clearSyncConfig()" style="background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;text-align:left;padding:0;display:none;">✕ Sync-Konfiguration entfernen</button>
     </div>
   </div>
 </div>
@@ -2484,6 +2539,193 @@
   bgNoteLoad();
   bgNoteRender();
 
+  /* ══════════════════════════════════════
+     CLOUD SYNC (Google Firebase Firestore)
+     Zugangsdaten nur im localStorage – nie im Code.
+     Nutzt die Firestore REST API – kein SDK nötig.
+  ══════════════════════════════════════ */
+
+  function getSyncConfig() {
+    const apiKey    = lsGet('sync_apikey', '');
+    const projectId = lsGet('sync_projectid', '');
+    const uid       = lsGet('sync_uid', '');
+    return (apiKey && projectId && uid) ? { apiKey, projectId, uid } : null;
+  }
+
+  /* Firestore REST Basis-URL */
+  function _fsUrl(cfg) {
+    return `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/dashboard/${encodeURIComponent(cfg.uid)}?key=${cfg.apiKey}`;
+  }
+
+  function updateSyncStatusLabel() {
+    const cfg = getSyncConfig();
+    const lbl = document.getElementById('syncStatusLabel');
+    const btn = document.getElementById('syncNowBtn');
+    if (!lbl) return;
+    if (cfg) {
+      lbl.textContent = 'Aktiv · Firebase · ID: ' + cfg.uid;
+      lbl.style.color = 'var(--green)';
+      if (btn) btn.style.display = 'inline-flex';
+    } else {
+      lbl.textContent = 'Nicht konfiguriert';
+      lbl.style.color = '';
+      if (btn) btn.style.display = 'none';
+    }
+  }
+
+  function openSyncModal() {
+    const cfg = getSyncConfig();
+    if (cfg) {
+      document.getElementById('sync-apikey').value    = cfg.apiKey;
+      document.getElementById('sync-projectid').value = cfg.projectId;
+      document.getElementById('sync-uid').value       = cfg.uid;
+      document.getElementById('syncClearBtn').style.display = 'block';
+    } else {
+      document.getElementById('syncClearBtn').style.display = 'none';
+    }
+    document.getElementById('syncTestResult').textContent = '';
+    document.getElementById('syncModalOverlay').style.display = 'flex';
+  }
+  function closeSyncModal() {
+    document.getElementById('syncModalOverlay').style.display = 'none';
+  }
+  document.getElementById('syncModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeSyncModal();
+  });
+
+  function saveSyncConfig() {
+    const apiKey    = document.getElementById('sync-apikey').value.trim();
+    const projectId = document.getElementById('sync-projectid').value.trim();
+    const uid       = document.getElementById('sync-uid').value.trim();
+    if (!apiKey || !projectId || !uid) {
+      document.getElementById('syncTestResult').textContent = '⚠ Bitte alle Felder ausfüllen.';
+      document.getElementById('syncTestResult').style.color = 'var(--red)';
+      return;
+    }
+    lsSet('sync_apikey',    apiKey);
+    lsSet('sync_projectid', projectId);
+    lsSet('sync_uid',       uid);
+    updateSyncStatusLabel();
+    document.getElementById('syncClearBtn').style.display = 'block';
+    document.getElementById('syncTestResult').textContent = '✓ Gespeichert. Lade Cloud-Daten…';
+    document.getElementById('syncTestResult').style.color = 'var(--green)';
+    syncLoad().then(() => closeSyncModal());
+  }
+
+  function clearSyncConfig() {
+    if (!window.confirm('Sync-Konfiguration entfernen? Deine lokalen Daten bleiben erhalten.')) return;
+    lsRemove('sync_apikey'); lsRemove('sync_projectid'); lsRemove('sync_uid');
+    updateSyncStatusLabel();
+    closeSyncModal();
+  }
+
+  async function testSyncConnection() {
+    const apiKey    = document.getElementById('sync-apikey').value.trim();
+    const projectId = document.getElementById('sync-projectid').value.trim();
+    const uid       = document.getElementById('sync-uid').value.trim();
+    const res       = document.getElementById('syncTestResult');
+    res.textContent = '…Verbinde mit Firebase';
+    res.style.color = 'var(--text-muted)';
+    if (!apiKey || !projectId || !uid) {
+      res.textContent = '⚠ Felder ausfüllen.'; res.style.color = 'var(--red)'; return;
+    }
+    try {
+      const cfg = { apiKey, projectId, uid };
+      // GET: Dokument lesen (404 = noch nicht vorhanden, aber Verbindung OK)
+      const r = await fetch(_fsUrl(cfg));
+      if (r.ok || r.status === 404) {
+        res.textContent = '✓ Firebase erreichbar' + (r.status === 404 ? ' (noch kein Datensatz – wird beim ersten Speichern angelegt)' : '');
+        res.style.color = 'var(--green)';
+      } else {
+        const body = await r.json().catch(() => ({}));
+        res.textContent = '✕ Fehler ' + r.status + ': ' + (body?.error?.message || r.statusText);
+        res.style.color = 'var(--red)';
+      }
+    } catch(e) {
+      res.textContent = '✕ Netzwerkfehler: ' + e.message;
+      res.style.color = 'var(--red)';
+    }
+  }
+
+  /* ── Firestore-Wert-Wrapper (REST API erwartet typisierte Felder) ── */
+  function _toFs(obj) {
+    // Speichert das gesamte Payload als einzelnen JSON-String im stringValue-Feld
+    return { fields: { payload: { stringValue: JSON.stringify(obj) } } };
+  }
+  function _fromFs(doc) {
+    try { return JSON.parse(doc.fields.payload.stringValue); }
+    catch(e) { return null; }
+  }
+
+  /* ── Upload ── */
+  async function syncSave() {
+    const cfg = getSyncConfig();
+    if (!cfg) return;
+    const payload = {
+      exams:     JSON.parse(lsGet('app_exams',     '[]')),
+      schedule:  JSON.parse(lsGet('app_schedule',  '[]')),
+      notes:     JSON.parse(lsGet('app_notes',     '{}')),
+      note_done: JSON.parse(lsGet('app_note_done', '{}')),
+      cancelled: JSON.parse(lsGet('app_cancelled', '{}')),
+      bgnote:    JSON.parse(lsGet('app_bgnote',    '[]')),
+    };
+    try {
+      await fetch(_fsUrl(cfg), {
+        method: 'PATCH',   // PATCH = upsert in Firestore REST
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(_toFs(payload)),
+      });
+      _updateSyncTime();
+    } catch(e) { /* offline – lokal bereits gespeichert */ }
+  }
+
+  /* ── Download ── */
+  async function syncLoad() {
+    const cfg = getSyncConfig();
+    if (!cfg) return;
+    try {
+      const r = await fetch(_fsUrl(cfg));
+      if (r.status === 404) return; // noch kein Datensatz
+      if (!r.ok) return;
+      const doc = await r.json();
+      const d = _fromFs(doc);
+      if (!d) return;
+      if (d.exams)     lsSet('app_exams',     JSON.stringify(d.exams));
+      if (d.schedule)  lsSet('app_schedule',  JSON.stringify(d.schedule));
+      if (d.notes)     lsSet('app_notes',     JSON.stringify(d.notes));
+      if (d.note_done) lsSet('app_note_done', JSON.stringify(d.note_done));
+      if (d.cancelled) lsSet('app_cancelled', JSON.stringify(d.cancelled));
+      if (d.bgnote)    lsSet('app_bgnote',    JSON.stringify(d.bgnote));
+      loadAll();
+      renderExams();
+      refreshScheduleContent();
+      bgNoteLoad(); bgNoteRender();
+      _updateSyncTime();
+    } catch(e) { /* offline */ }
+  }
+
+  function _updateSyncTime() {
+    const t = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+    const lbl = document.getElementById('lastUpdated');
+    if (lbl) lbl.textContent = 'synced · ' + t;
+  }
+
+  async function syncNow() {
+    const btn = document.getElementById('syncNowBtn');
+    if (btn) btn.textContent = '…';
+    await syncLoad();
+    if (btn) btn.textContent = '↕ Jetzt synchronisieren';
+  }
+
+  /* ── saveAll & bgNoteSave patchen ── */
+  const _origSaveAll = saveAll;
+  window.saveAll = function() { _origSaveAll(); syncSave(); };
+  const _origBgNoteSave = bgNoteSave;
+  window.bgNoteSave = function() { _origBgNoteSave(); syncSave(); };
+
+  /* ── Beim Start ── */
+  updateSyncStatusLabel();
+  syncLoad();
 
 </script>
 
