@@ -537,9 +537,21 @@
     /* Einstellungs-Panel zweispaltig statt auto */
     #topSettingsPanelInner { grid-template-columns: 1fr 1fr !important; }
 
-    /* Stundenplan-Gitter: horizontal scrollbar, Mindestspaltenbreite */
-    .sem-scroll { overflow-x: auto; }
-    .schedule-week-grid { min-width: 480px; }
+    /* Stundenplan: nur ein Tag pro Reihe, untereinander – aktueller Tag zuerst */
+    .sem-scroll { overflow-x: visible; }
+    .schedule-week-grid {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .schedule-day {
+      order: var(--day-order, 0);
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .schedule-day:last-child { border-bottom: none; }
+    /* Vergangene Tage des aktuellen Tages-Stacks etwas zurücknehmen */
+    .schedule-week-grid .schedule-day.past { order: 200; }
   }
 
   @media print {
@@ -837,13 +849,13 @@
         <div style="font-size:11px;color:var(--text-secondary);">Ändert Kurs, Raum, Zeit und Farbe für alle Einträge</div>
       </div>
     </button>
-    <button id="evtCancelBtn" onclick="evtDoCancel()" style="display:flex;align-items:center;gap:14px;width:100%;background:var(--inset);
+    <button id="evtCancelBtn" onclick="evtDoRemove()" style="display:flex;align-items:center;gap:14px;width:100%;background:var(--inset);
       box-shadow:inset 2px 2px 5px var(--shadow-dark),inset -2px -2px 5px var(--shadow-light);
       border:none;border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;">
       <div style="width:4px;height:36px;border-radius:3px;flex-shrink:0;background:var(--red);"></div>
       <div>
-        <div id="evtCancelLabel" style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:3px;">✕ Diesen Termin absagen</div>
-        <div id="evtCancelSub" style="font-size:11px;color:var(--text-secondary);">Nur dieser Wochentermin fällt aus – Serie bleibt erhalten</div>
+        <div id="evtCancelLabel" style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:3px;">🗑 Diesen Termin entfernen</div>
+        <div id="evtCancelSub" style="font-size:11px;color:var(--text-secondary);">Nur dieser Termin an diesem Tag wird entfernt – eine Notiz wandert zum nächsten Termin dieses Fachs</div>
       </div>
     </button>
   </div>
@@ -1179,7 +1191,8 @@
   // Notes keyed by "YYYY-Www-dayIdx-courseIdx"
   let schedNotes    = {};
   let noteCompleted = {};
-  let cancelledSlots = {}; // key = noteKey → true wenn Termin abgesagt
+  let cancelledSlots = {}; // Legacy (Absage) – nur noch zum Ausblenden alter Daten
+  let removedSlots   = {}; // key = noteKey → true wenn Termin für diesen Tag entfernt
 
   /* ── LocalStorage persistence ── */
   function saveAll() {
@@ -1189,6 +1202,7 @@
       localStorage.setItem('app_notes',       JSON.stringify(schedNotes));
       localStorage.setItem('app_note_done',   JSON.stringify(noteCompleted));
       localStorage.setItem('app_cancelled',   JSON.stringify(cancelledSlots));
+      localStorage.setItem('app_removed',      JSON.stringify(removedSlots));
     } catch(e) { console.warn('Speichern fehlgeschlagen', e); }
   }
 
@@ -1206,6 +1220,8 @@
       if (rawDone) noteCompleted = JSON.parse(rawDone);
       const rawCancelled = localStorage.getItem('app_cancelled');
       if (rawCancelled) cancelledSlots = JSON.parse(rawCancelled);
+      const rawRemoved = localStorage.getItem('app_removed');
+      if (rawRemoved) removedSlots = JSON.parse(rawRemoved);
     } catch(e) { console.warn('Laden fehlgeschlagen', e); }
   }
 
@@ -1593,6 +1609,10 @@
         + (isTodayCol ? ' today-col' : '')
         + (isPrevToday ? ' prev-today' : '')
         + (isNextToday ? ' next-today' : '');
+      // Reihenfolge für Mobile-Hochformat: heutiger Tag zuerst, kommende darunter, vergangene ans Ende
+      let dayOrder = d;
+      if (isThisWeek) dayOrder = (dateNorm < today) ? (100 + d) : (d - todayDowCheck);
+      col.style.setProperty('--day-order', dayOrder);
       const numClass = isTodayCol ? 'schedule-day-num today' : 'schedule-day-num';
       col.innerHTML = `
         <div class="schedule-day-header">
@@ -1617,7 +1637,8 @@
         const roomStr    = entry.room ? ' (' + entry.room + ')' : '';
         const nKey       = noteKey(monday, d, entry.idx);
         const noteVal    = schedNotes[nKey] || '';
-        const isCancelled = !!cancelledSlots[nKey];
+        // Für diesen Tag entfernte (oder alt-abgesagte) Termine werden nicht angezeigt
+        if (removedSlots[nKey] || cancelledSlots[nKey]) return;
 
         /* ── Event row ── */
         const ev = document.createElement('div');
@@ -1628,22 +1649,10 @@
 
         ev.addEventListener('click', (e) => {
           e.stopPropagation();
-          showEvtChoice(entry.idx, nKey, isCancelled);
+          showEvtChoice(entry.idx, nKey, monday, d);
         });
 
-        if (isCancelled) {
-          // Abgesagter Termin: gedimmt, durchgestrichen, Undo-Button
-          ev.style.opacity = '0.45';
-          ev.innerHTML = `
-            <div class="sched-event-bar" style="background:var(--red);margin-top:3px;"></div>
-            <div class="sched-event-text" style="flex:1;min-width:0;text-decoration:line-through;">
-              <strong>${entry.course}</strong>${compact ? '' : roomStr}
-              ${(!compact && timeStr) ? '<br><span style="font-size:10px;color:var(--text-muted);">' + timeStr + '</span>' : ''}
-            </div>
-            <span style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:0.06em;flex-shrink:0;padding-top:2px;">ABGESAGT</span>
-          `;
-        } else {
-          ev.innerHTML = `
+        ev.innerHTML = `
             <div class="sched-event-bar" style="background:${color};margin-top:3px;"></div>
             <div class="sched-event-text" style="flex:1;min-width:0;">
               <strong>${entry.course}</strong>${compact ? '' : roomStr}
@@ -1658,7 +1667,6 @@
                 onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)';">✏</button>
             </div>` : ''}
           `;
-        }
         eventsEl.appendChild(ev);
 
         /* ── Note area (always, both weeks) ── */
@@ -1723,11 +1731,12 @@
 
         const openBtn = ev.querySelector('.note-open-btn');
         if (openBtn) {
-          openBtn.addEventListener('click', () => {
+          openBtn.addEventListener('click', (e) => {
+            e.stopPropagation();           // verhindert das Öffnen des Aktions-Menüs
             wrapper.style.display = 'block';
             openBtn.style.display = 'none';
             autoResize(ta);
-            ta.focus();
+            ta.focus();                    // Textfeld direkt aktiv
           });
         }
       });
@@ -1845,27 +1854,24 @@
   }
 
   /* ── Event Aktions-Modal ── */
-  let _evtIdx  = -1;  // schedEntries-Index
-  let _evtNKey = '';  // noteKey für Cancel-Slot
+  let _evtIdx    = -1;  // schedEntries-Index
+  let _evtNKey   = '';  // noteKey des angeklickten Termins
+  let _evtMonday = null;
+  let _evtDay    = 0;
 
-  function showEvtChoice(idx, nKey, isCancelled) {
-    _evtIdx  = idx;
-    _evtNKey = nKey;
-    const entry     = schedEntries[idx];
-    const color     = entry.color || DEFAULT_SCHED_COLOR;
+  function showEvtChoice(idx, nKey, monday, day) {
+    _evtIdx    = idx;
+    _evtNKey   = nKey;
+    _evtMonday = monday;
+    _evtDay    = day;
+    const entry = schedEntries[idx];
+    const color = entry.color || DEFAULT_SCHED_COLOR;
     document.getElementById('evtChoiceTitle').textContent = entry.course;
     document.getElementById('evtChoiceSub').textContent   =
       DAY_LONG[entry.day] +
       (entry.startTime ? ' · ' + entry.startTime : '') +
       (entry.room      ? ' · ' + entry.room      : '');
     document.getElementById('evtColorBar').style.background = color;
-    // Cancel-Button je nach Zustand
-    document.getElementById('evtCancelLabel').textContent = isCancelled
-      ? '↩ Absage rückgängig machen' : '✕ Diesen Termin absagen';
-    document.getElementById('evtCancelSub').textContent = isCancelled
-      ? 'Termin wieder als aktiv markieren'
-      : 'Nur dieser Wochentermin fällt aus – Serie bleibt erhalten';
-    document.getElementById('evtCancelLabel').style.color = isCancelled ? 'var(--green)' : 'var(--red)';
     document.getElementById('evtChoiceOverlay').style.display = 'flex';
   }
 
@@ -1882,22 +1888,60 @@
     editSchedEntry(idx);
   }
 
-  function evtDoCancel() {
-    const nKey = _evtNKey;
-    closeEvtChoice();
-    if (cancelledSlots[nKey]) {
-      delete cancelledSlots[nKey];
-    } else {
-      cancelledSlots[nKey] = true;
+  // Findet den nächsten Termin (nach dem entfernten) mit gleichem Fach
+  function nextOccurrenceKey(course, fromMonday, fromDay) {
+    const startDate = new Date(fromMonday);
+    startDate.setDate(fromMonday.getDate() + fromDay);
+    startDate.setHours(0,0,0,0);
+    const cand = schedEntries
+      .map((e, i) => ({ e, i }))
+      .filter(x => x.e.course === course)
+      .sort((a, b) => a.e.day - b.e.day);
+    if (!cand.length) return null;
+    const wm = new Date(fromMonday);
+    for (let w = 0; w < 60; w++) {
+      for (const { e, i } of cand) {
+        const occ = new Date(wm);
+        occ.setDate(wm.getDate() + e.day);
+        occ.setHours(0,0,0,0);
+        if (occ.getTime() <= startDate.getTime()) continue;
+        const key = noteKey(wm, e.day, i);
+        if (removedSlots[key]) continue;
+        return key;
+      }
+      wm.setDate(wm.getDate() + 7);
     }
+    return null;
+  }
+
+  function evtDoRemove() {
+    const idx = _evtIdx, nKey = _evtNKey, monday = _evtMonday, day = _evtDay;
+    closeEvtChoice();
+    const entry = schedEntries[idx];
+    // Diesen Termin an diesem Tag entfernen
+    removedSlots[nKey] = true;
+    // Hängt eine Notiz dran → zum nächsten Termin dieses Fachs übergeben
+    const note = schedNotes[nKey];
+    if (note && note.trim()) {
+      const done   = !!noteCompleted[nKey];
+      const target = nextOccurrenceKey(entry.course, monday, day);
+      if (target) {
+        schedNotes[target] = note;
+        if (done) noteCompleted[target] = true;
+      }
+    }
+    delete schedNotes[nKey];
+    delete noteCompleted[nKey];
     saveAll();
     refreshScheduleContent();
+    renderNextTask();
   }
 
   function closeEvtChoice() {
     document.getElementById('evtChoiceOverlay').style.display = 'none';
-    _evtIdx  = -1;
-    _evtNKey = '';
+    _evtIdx    = -1;
+    _evtNKey   = '';
+    _evtMonday = null;
   }
   document.getElementById('evtChoiceOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeEvtChoice();
@@ -2177,6 +2221,7 @@
       const result = [];
       schedEntries.forEach((entry, idx) => {
         const nKey = noteKey(weekMonday, entry.day, idx);
+        if (removedSlots[nKey] || cancelledSlots[nKey]) return;
         const text = schedNotes[nKey] || '';
         if (!text.trim()) return;
         if (noteCompleted[nKey]) return;
@@ -2271,9 +2316,10 @@
     schedNotes     = {};
     noteCompleted  = {};
     cancelledSlots = {};
+    removedSlots   = {};
     // Aktuelle Keys + neuer Notiz-Key + alte Legacy-Keys (wh_*) restlos entfernen
     [
-      'app_exams','app_schedule','app_notes','app_note_done','app_cancelled',
+      'app_exams','app_schedule','app_notes','app_note_done','app_cancelled','app_removed',
       'app_name','app_uni','app_accent','app_darkmode','app_bgnote',
       'wh_exams','wh_schedule','wh_notes','wh_note_done','wh_cancelled',
       'wh_name','wh_uni','wh_accent','wh_darkmode'
@@ -2319,6 +2365,7 @@
         dayEntries.forEach(e => {
           const color  = e.color || DEFAULT_SCHED_COLOR;
           const nKey   = noteKey(curMon, d, e.idx);
+          if (removedSlots[nKey] || cancelledSlots[nKey]) return;
           const note   = schedNotes[nKey] || '';
           const done   = !!noteCompleted[nKey];
           out += `<div class="pv-event" style="flex-direction:column;align-items:stretch;padding:5px 7px;gap:4px;">
