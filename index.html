@@ -485,6 +485,27 @@
   .bgnote-item.done .bgnote-line { text-decoration: line-through; color: var(--text-muted); }
   .bgnote-hint { font-size:10px; color:var(--text-muted); font-style:italic; }
 
+  /* Markier-Symbol (To-do/Kalender-Flagge) – steht vor dem Abhak-Kästchen */
+  .bgnote-flag {
+    flex-shrink:0; width:18px; height:18px; margin-top:2px; padding:0;
+    background:none; border:none; cursor:pointer; line-height:1;
+    color: var(--text-muted); font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+    transition: color 0.15s, transform 0.1s;
+  }
+  .bgnote-flag:hover  { color: var(--text-secondary); }
+  .bgnote-flag:active { transform: scale(0.85); }
+  .bgnote-item.flagged .bgnote-flag { color: var(--accent); }
+  /* Markierte Notizen: dick hervorgehoben (stehen per Sortierung oben) */
+  .bgnote-item.flagged .bgnote-line { font-weight: 700; }
+
+  /* Schwarz/Weiß-Farbe: folgt dem Theme (dunkel im Hellmodus, hell im Dunkelmodus).
+     Deckt die neue Sentinel-Farbe (#010101) und Alt-Notizen mit fixem #2c2318 ab. */
+  .bgnote-line [style*="rgb(1, 1, 1)"],
+  .bgnote-line font[color="#010101"],
+  .bgnote-line [style*="rgb(44, 35, 24)"],
+  .bgnote-line font[color="#2c2318"] { color: var(--text-primary) !important; }
+
   .footer {
     margin-top: 0.25rem;
     font-size: 11px;
@@ -550,9 +571,27 @@
       border-bottom: 1px solid var(--border);
     }
     .schedule-day:last-child { border-bottom: none; }
-    /* Vergangene Tage des aktuellen Tages-Stacks etwas zurücknehmen */
-    .schedule-week-grid .schedule-day.past { order: 200; }
+
+    /* Vergangene Tage sind standardmäßig versteckt und erscheinen – über den
+       "Frühere Tage"-Button aufgerufen – chronologisch OBERHALB des heutigen Tages */
+    .schedule-week-grid:not(.show-past) .schedule-day.past { display: none; }
+    .schedule-week-grid.show-past .schedule-day.past { opacity: 0.55; }
+
+    /* Umschalt-Button steht ganz oben im Tages-Stack (nur Hochformat sichtbar) */
+    .past-toggle { display: flex; }
   }
+  /* Umschalt-Button: in allen anderen Ansichten ausgeblendet */
+  .past-toggle {
+    display: none;
+    order: -999;
+    align-items: center; justify-content: center; gap: 6px;
+    width: 100%; padding: 7px 10px; margin-bottom: 1px;
+    background: none; border: none; border-bottom: 1px solid var(--border);
+    color: var(--text-muted); font-family: var(--font-body);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    cursor: pointer; transition: color 0.15s;
+  }
+  .past-toggle:hover { color: var(--accent); }
 
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -796,7 +835,7 @@
           <button class="bgnote-tool b" title="Fett" onmousedown="event.preventDefault();" onclick="bgNoteBold()">B</button>
           <div class="bgnote-sep"></div>
           <!-- Farbige Schrift: Theme-Farben + freie Farbwahl -->
-          <span class="bgnote-swatch" style="background:var(--text-primary)" title="Standard" onmousedown="event.preventDefault();" onclick="bgNoteColor('#2c2318')"></span>
+          <span class="bgnote-swatch" style="background:var(--text-primary);border-color:var(--text-muted);" title="Schwarz / Weiß (folgt dem Modus)" onmousedown="event.preventDefault();" onclick="bgNoteColor('#010101')"></span>
           <span class="bgnote-swatch" style="background:var(--accent)"       title="Akzent"   onmousedown="event.preventDefault();" onclick="bgNoteColor('#c8562a')"></span>
           <span class="bgnote-swatch" style="background:var(--green)"        title="Grün"     onmousedown="event.preventDefault();" onclick="bgNoteColor('#4a8a5a')"></span>
           <span class="bgnote-swatch" style="background:var(--blue)"         title="Blau"     onmousedown="event.preventDefault();" onclick="bgNoteColor('#2a6a9a')"></span>
@@ -805,7 +844,7 @@
           </label>
         </div>
         <div class="bgnote-list" id="bgNoteList"></div>
-        <div class="bgnote-hint">↵ neue Zeile · Kästchen zum Abhaken · Text markieren für Fett/Farbe</div>
+        <div class="bgnote-hint">↵ neue Zeile · ⚑ für heute markieren · Kästchen zum Abhaken · Text markieren für Fett/Farbe</div>
       </div>
     </div>
 
@@ -1609,9 +1648,10 @@
         + (isTodayCol ? ' today-col' : '')
         + (isPrevToday ? ' prev-today' : '')
         + (isNextToday ? ' next-today' : '');
-      // Reihenfolge für Mobile-Hochformat: heutiger Tag zuerst, kommende darunter, vergangene ans Ende
+      // Reihenfolge für Mobile-Hochformat: heute = 0, kommende Tage darunter (1,2…),
+      // vergangene Tage chronologisch darüber (negativ)
       let dayOrder = d;
-      if (isThisWeek) dayOrder = (dateNorm < today) ? (100 + d) : (d - todayDowCheck);
+      if (isThisWeek) dayOrder = d - todayDowCheck;
       col.style.setProperty('--day-order', dayOrder);
       const numClass = isTodayCol ? 'schedule-day-num today' : 'schedule-day-num';
       col.innerHTML = `
@@ -1766,6 +1806,25 @@
         // Insert strip at top of eventsEl so it always occupies its fixed height
         eventsEl.insertBefore(strip, eventsEl.firstChild);
       }
+    }
+
+    // "Frühere Tage"-Umschalter (nur aktuelle Woche im Hochformat sichtbar; CSS blendet ihn sonst aus)
+    const _isThisWeek   = monday.getTime() === getWeekMonday(0).getTime();
+    const _todayDow     = (new Date().getDay() + 6) % 7;
+    if (mode === 'current' && _isThisWeek && _todayDow > 0) {
+      const toggle = document.createElement('button');
+      toggle.className = 'past-toggle';
+      const setLabel = () => {
+        const shown = grid.classList.contains('show-past');
+        toggle.textContent = shown ? '↓ Frühere Tage ausblenden' : '↑ Frühere Tage';
+      };
+      setLabel();
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        grid.classList.toggle('show-past');
+        setLabel();
+      });
+      grid.appendChild(toggle);
     }
   }
 
@@ -2441,6 +2500,10 @@
 
   function applyDark(on) {
     document.documentElement.classList.toggle('dark', on);
+    // Statusleisten-/Browser-Farbe an den tatsächlichen Modus angleichen
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+      m.setAttribute('content', on ? '#1a1714' : '#e8e3dc');
+    });
   }
 
   function updateDmButtons(mode) {
@@ -2496,11 +2559,22 @@
   }
   function bgNoteSave() { lsSet('app_bgnote', JSON.stringify(bgItems)); }
 
-  function bgNoteRender() {
+  function bgNoteRender(focusObj) {
+    // Markierte Notizen stabil nach oben sortieren (mehrere möglich)
+    bgItems.sort((a, b) => (b.flagged ? 1 : 0) - (a.flagged ? 1 : 0));
     bgList.innerHTML = '';
     bgItems.forEach((it, idx) => {
       const row = document.createElement('div');
-      row.className = 'bgnote-item' + (it.done ? ' done' : '');
+      row.className = 'bgnote-item' + (it.done ? ' done' : '') + (it.flagged ? ' flagged' : '');
+
+      const flag = document.createElement('button');     // Markier-Symbol (vor dem Kästchen)
+      flag.className = 'bgnote-flag';
+      flag.textContent = it.flagged ? '⚑' : '⚐';
+      flag.title = it.flagged ? 'Markierung entfernen' : 'Für heute markieren';
+      flag.addEventListener('click', () => {
+        bgItems[idx].flagged = !bgItems[idx].flagged;
+        bgNoteSave(); bgNoteRender(bgItems[idx]);
+      });
 
       const box = document.createElement('div');     // Kästchen zum Abhaken
       box.className = 'bgnote-check';
@@ -2516,8 +2590,17 @@
       line.addEventListener('input', () => { bgItems[idx].html = line.innerHTML; bgNoteSave(); bgNoteAdjust(); });
       line.addEventListener('keydown', (e) => bgNoteKey(e, idx, line));
 
-      row.appendChild(box); row.appendChild(line);
+      row.appendChild(flag); row.appendChild(box); row.appendChild(line);
       bgList.appendChild(row);
+
+      // Cursor in die gewünschte Zeile setzen (nach Enter/Backspace/Markieren)
+      if (focusObj && it === focusObj) {
+        setTimeout(() => {
+          line.focus();
+          const r = document.createRange(); r.selectNodeContents(line); r.collapse(false);
+          const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        }, 0);
+      }
     });
     bgNoteAdjust();
   }
@@ -2527,25 +2610,26 @@
     if (e.key === 'Enter') {
       e.preventDefault();
       bgItems[idx].html = line.innerHTML;
-      bgItems.splice(idx + 1, 0, { html:'', done:false });
-      bgNoteSave(); bgNoteRender();
-      const next = bgList.children[idx + 1].querySelector('.bgnote-line');
-      next.focus();
+      const newItem = { html:'', done:false, flagged:false };
+      bgItems.splice(idx + 1, 0, newItem);
+      bgNoteSave(); bgNoteRender(newItem);
     } else if (e.key === 'Backspace' && line.textContent === '' && bgItems.length > 1) {
       e.preventDefault();
+      const target = idx > 0 ? bgItems[idx - 1] : bgItems[idx + 1];
       bgItems.splice(idx, 1);
-      bgNoteSave(); bgNoteRender();
-      const prev = bgList.children[Math.max(0, idx - 1)].querySelector('.bgnote-line');
-      prev.focus();
-      // Cursor ans Ende setzen
-      const r = document.createRange(); r.selectNodeContents(prev); r.collapse(false);
-      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      bgNoteSave(); bgNoteRender(target);
     }
   }
 
   // Formatierung auf die aktuelle Auswahl anwenden
   function bgNoteBold()  { document.execCommand('bold'); bgNoteSyncActive(); bgNoteFlush(); }
-  function bgNoteColor(hex) { document.execCommand('foreColor', false, hex); bgNoteFlush(); }
+  function bgNoteColor(hex) {
+    // styleWithCSS sorgt für <span style="color:rgb(...)"> – nötig, damit die
+    // Schwarz/Weiß-Sentinel-Regel (#010101 → var(--text-primary)) greift
+    try { document.execCommand('styleWithCSS', false, true); } catch(e) {}
+    document.execCommand('foreColor', false, hex);
+    bgNoteFlush();
+  }
   function bgNoteFlush() {
     const el = document.activeElement;
     if (el && el.classList && el.classList.contains('bgnote-line')) {
@@ -2570,7 +2654,7 @@
   }
   function closeBgNote() { bgWrap.classList.remove('open'); bgWrap.style.maxHeight = '0px'; }
   function toggleBgNote(){ bgWrap.classList.contains('open') ? closeBgNote() : openBgNote(); }
-  function clearBgNote() { bgItems = [{ html:'', done:false }]; bgNoteSave(); bgNoteRender(); }
+  function clearBgNote() { bgItems = [{ html:'', done:false, flagged:false }]; bgNoteSave(); bgNoteRender(); }
   window.closeBgNote = closeBgNote; window.clearBgNote = clearBgNote;
   window.bgNoteBold = bgNoteBold;  window.bgNoteColor = bgNoteColor;
 
