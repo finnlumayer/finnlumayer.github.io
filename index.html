@@ -1941,7 +1941,8 @@
         }
       });
     } else if (_editingSchedIdx >= 0) {
-      schedEntries[_editingSchedIdx] = entry;
+      // Vorhandene Zusatzfelder (z.B. _uid bei Sonderterminen) erhalten
+      schedEntries[_editingSchedIdx] = { ...schedEntries[_editingSchedIdx], ...entry };
     } else {
       schedEntries.push(entry);
     }
@@ -1975,12 +1976,12 @@
   function evtDoEdit() {
     const idx = _evtIdx;
     closeEvtChoice();
-    // Serien-Edit: alle Einträge gleichen course+day aktualisieren
-    const seriesIndices = schedEntries
-      .map((e, i) => ({ e, i }))
-      .filter(({ e }) => e.course === schedEntries[idx].course && e.day === schedEntries[idx].day)
-      .map(({ i }) => i);
-    _evtSeriesIndices = seriesIndices;
+    // Nur diesen einen Eintrag bearbeiten. Jeder schedEntry ist bereits eine
+    // wöchentliche Serie (wird für jede Woche gerendert), d.h. die Änderung gilt
+    // automatisch für denselben Termin in allen folgenden Wochen. Andere Termine
+    // desselben Fachs am selben Tag (eigene schedEntries mit anderer Uhrzeit)
+    // bleiben unberührt.
+    _evtSeriesIndices = null;
     _editingSchedIdx  = idx;
     editSchedEntry(idx);
   }
