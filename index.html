@@ -2093,8 +2093,9 @@
       const todayDowCheck = (today.getDay() + 6) % 7;
       const isPrevToday = isThisWeek && !isTodayCol && todayDowCheck > 0 && d === todayDowCheck - 1;
       const isNextToday = isThisWeek && !isTodayCol && todayDowCheck < 4 && d === todayDowCheck + 1;
-      // Past: entweder vergangene Tage dieser Woche ODER alle Tage einer vergangenen Woche
-      const isPast = isPastWeek || (isThisWeek && dateNorm < today && !isPrevToday);
+      // Past: entweder vergangene Tage dieser Woche ODER alle Tage einer vergangenen Woche.
+      // Auch der Vortag (prev-today) zählt als abgelaufen und wird grau markiert.
+      const isPast = isPastWeek || (isThisWeek && dateNorm < today);
       col.className = 'schedule-day'
         + (isPast ? ' past' : '')
         + (isTodayCol ? ' today-col' : '')
