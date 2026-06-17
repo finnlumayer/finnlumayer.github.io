@@ -1266,8 +1266,8 @@
       border:none;border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;">
       <div id="evtColorBar" style="width:4px;height:36px;border-radius:3px;flex-shrink:0;"></div>
       <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">✏ Serie bearbeiten</div>
-        <div style="font-size:11px;color:var(--text-secondary);">Ändert Kurs, Raum, Zeit und Farbe für alle Einträge</div>
+        <div id="evtEditLabel" style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">✏ Serie bearbeiten</div>
+        <div id="evtEditSub" style="font-size:11px;color:var(--text-secondary);">Ändert Kurs, Raum, Zeit und Farbe für alle Einträge</div>
       </div>
     </button>
     <button id="evtOccEditBtn" onclick="evtDoOccEdit()" style="display:flex;align-items:center;gap:14px;width:100%;background:var(--inset);
@@ -1336,13 +1336,21 @@
       <button onclick="closeSchedModal()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:1rem;">
-      <div><label class="modal-label">Fach / Kürzel</label><input id="s-course" type="text" placeholder="z. B. RC 2" class="modal-input"></div>
+      <div id="s-modeToggle" style="display:flex;gap:6px;background:var(--inset);border-radius:10px;padding:4px;box-shadow:inset 2px 2px 5px var(--shadow-dark),inset -2px -2px 5px var(--shadow-light);">
+        <button type="button" id="s-mode-weekly" onclick="setSchedMode('weekly')">Wöchentlich</button>
+        <button type="button" id="s-mode-once" onclick="setSchedMode('once')">Einmalig</button>
+      </div>
+      <div><label id="s-courseLabel" class="modal-label">Fach / Kürzel</label><input id="s-course" type="text" placeholder="z. B. RC 2" class="modal-input"></div>
       <div><label class="modal-label">Raum</label><input id="s-room" type="text" placeholder="z. B. 4720" class="modal-input"></div>
-      <div>
+      <div id="s-dayWrap">
         <label class="modal-label">Tag</label>
         <select id="s-day" class="modal-input" style="cursor:pointer;">
           <option value="0">Montag</option><option value="1">Dienstag</option><option value="2">Mittwoch</option><option value="3">Donnerstag</option><option value="4">Freitag</option>
         </select>
+      </div>
+      <div id="s-dateWrap" style="display:none;">
+        <label class="modal-label">Datum</label>
+        <input id="s-date" type="date" class="modal-input" style="cursor:pointer;">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
         <div><label class="modal-label">Beginn</label><input id="s-start" type="time" class="modal-input"></div>
@@ -2079,9 +2087,13 @@
       const date = new Date(monday);
       date.setDate(monday.getDate() + d);
 
+      const colDateStr = date.getFullYear() + '-'
+        + String(date.getMonth() + 1).padStart(2, '0') + '-'
+        + String(date.getDate()).padStart(2, '0');
       const dayEntries = schedEntries
         .map((e, i) => ({ ...e, idx: i }))
-        .filter(e => e.day === d)
+        // Einmalige Termine (mit Datum) nur am exakten Tag, Serien nach Wochentag
+        .filter(e => e.date ? e.date === colDateStr : e.day === d)
         .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
 
       const col = document.createElement('div');
@@ -2289,10 +2301,35 @@
   let _editingSchedIdx   = -1;
   let _evtSeriesIndices  = null; // null = Einzel-Edit; Array = Serien-Edit
 
+  let _schedMode = 'weekly'; // 'weekly' = wöchentliche Serie | 'once' = einmaliger Termin
+
+  function _styleModeBtn(btn, active) {
+    btn.style.cssText = 'flex:1;border:none;border-radius:8px;padding:8px;'
+      + 'font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;'
+      + (active
+          ? 'background:var(--surface);box-shadow:2px 2px 5px var(--shadow-dark),-2px -2px 5px var(--shadow-light);color:var(--accent);'
+          : 'background:transparent;box-shadow:none;color:var(--text-muted);');
+  }
+
+  function setSchedMode(mode) {
+    _schedMode = mode;
+    const isOnce = mode === 'once';
+    document.getElementById('s-dayWrap').style.display  = isOnce ? 'none' : '';
+    document.getElementById('s-dateWrap').style.display = isOnce ? ''     : 'none';
+    document.getElementById('s-courseLabel').textContent = isOnce ? 'Bezeichnung' : 'Fach / Kürzel';
+    _styleModeBtn(document.getElementById('s-mode-weekly'), !isOnce);
+    _styleModeBtn(document.getElementById('s-mode-once'),    isOnce);
+    // Titel nur bei neuen Einträgen an den Modus anpassen (beim Bearbeiten setzt der Aufrufer ihn)
+    if (_editingSchedIdx < 0 && !_evtSeriesIndices) {
+      document.getElementById('schedModalTitle').textContent =
+        isOnce ? '📌 Termin eintragen' : '📚 Vorlesung eintragen';
+    }
+  }
+
   function openSchedModal() {
     _editingSchedIdx  = -1;
     _evtSeriesIndices = null;
-    document.getElementById('schedModalTitle').textContent = '📚 Vorlesung eintragen';
+    setSchedMode('weekly');
     document.getElementById('schedSaveBtn').textContent    = 'Eintrag speichern';
     document.getElementById('schedModalOverlay').style.display = 'flex';
     setTimeout(() => document.getElementById('s-course').focus(), 50);
@@ -2305,7 +2342,13 @@
     document.getElementById('s-room').value     = e.room      || '';
     document.getElementById('s-start').value    = e.startTime || '';
     document.getElementById('s-end').value      = e.endTime   || '';
-    document.getElementById('s-day').value      = String(e.day);
+    if (e.date) {
+      setSchedMode('once');
+      document.getElementById('s-date').value = e.date;
+    } else {
+      setSchedMode('weekly');
+      document.getElementById('s-day').value  = String(e.day);
+    }
     document.getElementById('s-color').value    = e.color     || DEFAULT_SCHED_COLOR;
     document.getElementById('s-colorPreview').style.background = e.color || DEFAULT_SCHED_COLOR;
     document.getElementById('schedModalTitle').textContent =
@@ -2320,10 +2363,11 @@
     _editingSchedIdx  = -1;
     _evtSeriesIndices = null;
     document.getElementById('schedModalOverlay').style.display = 'none';
-    ['s-course','s-room','s-start','s-end'].forEach(id => document.getElementById(id).value = '');
+    ['s-course','s-room','s-start','s-end','s-date'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('s-color').value = DEFAULT_SCHED_COLOR;
     document.getElementById('s-colorPreview').style.background = DEFAULT_SCHED_COLOR;
     document.getElementById('s-day').value = '0';
+    setSchedMode('weekly');
   }
   document.getElementById('schedModalOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeSchedModal();
@@ -2337,13 +2381,24 @@
     if (!course) { document.getElementById('s-course').style.borderColor='var(--red)'; return; }
     document.getElementById('s-course').style.borderColor='var(--border)';
     const entry = {
-      day:       parseInt(document.getElementById('s-day').value),
       course,
       room:      document.getElementById('s-room').value.trim(),
       startTime: document.getElementById('s-start').value,
       endTime:   document.getElementById('s-end').value,
       color:     document.getElementById('s-color').value,
     };
+    if (_schedMode === 'once') {
+      const dateVal = document.getElementById('s-date').value; // 'YYYY-MM-DD'
+      if (!dateVal) { document.getElementById('s-date').style.borderColor='var(--red)'; return; }
+      document.getElementById('s-date').style.borderColor='var(--border)';
+      const [yy, mm, dd] = dateVal.split('-').map(Number);
+      const dObj = new Date(yy, mm - 1, dd);
+      entry.date = dateVal;
+      entry.day  = (dObj.getDay() + 6) % 7; // Mo=0 … So=6 (für Sortierung / Anzeige)
+    } else {
+      entry.day  = parseInt(document.getElementById('s-day').value);
+      entry.date = null;
+    }
 
     if (_evtSeriesIndices && _evtSeriesIndices.length > 0) {
       // Serien-Edit: Felder übernehmen, Wochentag jedes Eintrags beibehalten
@@ -2383,11 +2438,28 @@
     _evtDay    = day;
     const entry = schedEntries[idx];
     const color = entry.color || DEFAULT_SCHED_COLOR;
+    const isOnce = !!entry.date;
     document.getElementById('evtChoiceTitle').textContent = entry.course;
+    let _whenStr;
+    if (isOnce) {
+      const [yy, mm, dd] = entry.date.split('-');
+      _whenStr = parseInt(dd) + '.' + parseInt(mm) + '.' + yy;
+    } else {
+      _whenStr = DAY_LONG[entry.day];
+    }
     document.getElementById('evtChoiceSub').textContent   =
-      DAY_LONG[entry.day] +
+      _whenStr +
       (entry.startTime ? ' · ' + entry.startTime : '') +
       (entry.room      ? ' · ' + entry.room      : '');
+    // Texte / Optionen je nach Termin-Typ anpassen
+    document.getElementById('evtEditLabel').textContent = isOnce ? '✏ Termin bearbeiten' : '✏ Serie bearbeiten';
+    document.getElementById('evtEditSub').textContent   = isOnce
+      ? 'Ändert Bezeichnung, Raum, Datum, Zeit und Farbe'
+      : 'Ändert Kurs, Raum, Zeit und Farbe für alle Einträge';
+    document.getElementById('evtOccEditBtn').style.display = isOnce ? 'none' : 'flex';
+    document.getElementById('evtCancelSub').textContent = isOnce
+      ? 'Dieser Termin wird entfernt'
+      : 'Nur dieser Termin an diesem Tag wird entfernt – eine Notiz wandert zum nächsten Termin dieses Fachs';
     document.getElementById('evtColorBar').style.background = color;
     const _occBar = document.getElementById('evtOccColorBar');
     if (_occBar) _occBar.style.background = color;
